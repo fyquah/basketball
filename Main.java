@@ -106,10 +106,10 @@ public class Main {
         // final double c = 0.0;
 
         // return Math.atan2(y + 0.5 * , x);
-        return Math.atan2((4 * h * y), (x * x + 4 * h * x));
-        // return Math.atan2(
-        //         (y + square(Math.sqrt(h)+Math.sqrt(h-y))),
-        //         x);
+        // return Math.atan2((4 * h * y), (x * x + 4 * h * x));
+        return Math.atan2(
+                (y + square(Math.sqrt(h)+Math.sqrt(h-y))),
+                x);
     }
 
     public void debugFrame() {
@@ -149,7 +149,7 @@ public class Main {
             robot.mouseMove(
                     hoopPosition.getX(),
                     hoopPosition.getY());
-            Thread.sleep(1000);
+            Thread.sleep(500);
             robot.mouseMove(START_X, START_Y);
             throwTarget(angle);
             Thread.sleep(4000);
@@ -181,13 +181,20 @@ public class Main {
 
     public static void main(String[] args) {
         Main x = new Main();
-        try {
-            // x.debugFrame();
-            x.run();
-        } catch (AWTException e) {
 
-        } catch (InterruptedException e) {
+            System.out.println(
+                    x.calculateTargetAngle(
+                        new Position(
+                            x.BALL_X + 50,
+                            x.BALL_Y - 1))
+                    * 180.0 / Math.PI);
+        // try {
+        //     // x.debugFrame();
+        //     // x.run();
+        // } catch (AWTException e) {
 
-        }
+        // } catch (InterruptedException e) {
+
+        // }
     }
 }
