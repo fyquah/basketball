@@ -80,7 +80,7 @@ public class Main {
                 if (isClose(getR(color), 245)
                         && isClose(getG(color), 223)
                         && isClose(getB(color), 78)) {
-                    return new Position(SS_X + x + 50, SS_Y + y + 20);
+                    return new Position(SS_X + x + 41, SS_Y + y + 20);
                 }
             }
         }
@@ -103,8 +103,23 @@ public class Main {
         return Math.atan2((4 * h * y), (x * x + 4 * h * x));
     }
 
+    public void debugFrame() {
+        BufferedImage screenShot = robot.createScreenCapture(
+                new Rectangle(SS_X, SS_Y, 360, 600));
+        Position hoopPosition = findTarget(screenShot);
+        screenShot.getGraphics().drawOval(
+                hoopPosition.getX() - SS_X,
+                hoopPosition.getY() - SS_Y,
+                50,
+                50);
+        frame.getContentPane().setLayout(new FlowLayout());
+        frame.getContentPane().add(new JLabel(new ImageIcon(screenShot)));
+        frame.pack();
+        frame.setVisible(true);
+    }
+
     public void run() throws InterruptedException, AWTException {
-        robot.mouseMove(1100, 700);
+        robot.mouseMove(BALL_X, BALL_Y);
         robot.mousePress(InputEvent.BUTTON1_MASK);
         Thread.sleep(300);
         robot.mousePress(InputEvent.BUTTON1_MASK);
@@ -117,23 +132,19 @@ public class Main {
             Position hoopPosition = findTarget(screenShot);
             double angle = calculateTargetAngle(hoopPosition);
             double angleInDegrees = angle * 180.0 / Math.PI;
+            Position origin = new Position(BALL_X, BALL_Y);
+            System.out.println("origin = " + origin);
+            System.out.println("hoop Position = " + hoopPosition);
             System.out.println("projection angle = " + angleInDegrees);
             throwTarget(angle);
-            Thread.sleep(5000);
+            Thread.sleep(3000);
         }
 
-        // screenShot.getGraphics().drawOval(
-        //         targetPosition.getX(),
-        //         targetPosition.getY(),
-        //         50,
-        //         50);
-        // frame.getContentPane().setLayout(new FlowLayout());
-        // frame.getContentPane().add(new JLabel(new ImageIcon(screenShot)));
-        // frame.pack();
-        // frame.setVisible(true);
     }
-        public int BALL_X = 1100;
-        public int BALL_Y = 700;
+
+
+    public int BALL_X = 1083;
+    public int BALL_Y = 675;
 
     public void throwTarget(double angle) throws InterruptedException {
         robot.mouseMove(BALL_X, BALL_Y);
@@ -143,8 +154,6 @@ public class Main {
         double y = Math.sin(angle);
 
         for (int i = 1 ; i < 10 ; i++) {
-            System.out.println("dx = " + x);
-            System.out.println("dy = " + y);
             robot.mouseMove(
                     BALL_X + (int) (x * i * 10),
                     BALL_Y - (int) (y * i * 10));
