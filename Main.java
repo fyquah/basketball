@@ -71,7 +71,7 @@ public class Main {
                         && isClose(getB(color), 78)) {
                     return new Position(
                             SS_X + x + 38,
-                            SS_Y + y + 30);
+                            SS_Y + y + 60);
                 }
             }
         }
@@ -85,6 +85,17 @@ public class Main {
         return x * x;
     }
 
+    /* Transforms a 2D parabola angle to a 3d Space with a constant
+     * z-axis.
+     */
+    public double transformAngle(double a) {
+        // 0.8 (too high)
+        // 0.5 (too low)
+        // 0.65 (too low)
+        //
+        return Math.PI / 2 + 0.78 * (a - Math.PI / 2);
+    }
+
     public double calculateTargetAngle(Position hoopPosition) {
         Position origin = new Position(BALL_X, BALL_Y);
         final double x = hoopPosition.getX() - origin.getX();
@@ -96,7 +107,7 @@ public class Main {
 
         // return Math.atan2(y, x);
         // return Math.atan2(y + 0.5 * , x);
-        return Math.atan2((4 * h * y), (x * x + 4 * h * x));
+        return transformAngle(Math.atan2((4 * h * y), (x * x + 4 * h * x)));
         // return Math.atan2(
         //         (y + square(Math.sqrt(h)+Math.sqrt(h-y))),
         //         x);
@@ -129,8 +140,8 @@ public class Main {
         Thread.sleep(1500);
 
         // All in ms
-        final long SCREENSHOT_SLEEP = 500;
-        final long THROW_DRAG_DELAY = 1000;
+        final long SCREENSHOT_SLEEP = 250;
+        final long THROW_DRAG_DELAY = 300;
 
         for (int i = 0 ;  ; i++) {
 
@@ -181,14 +192,15 @@ public class Main {
                 System.out.println("Moving case");
 
                 final double h = 350.0;
-                final double a_y = -1840;
+                final double a_y = -1800;
                 final double u_y = Math.sqrt(-2 * a_y * h);
 
-                double y = newHoopPosition.getY() - BALL_Y;
+                double y = BALL_Y - newHoopPosition.getY();
                 double timeRequired =
-                        (-u_y + Math.sqrt(u_y * u_y - 2 * a_y * y))
+                        (-u_y - Math.sqrt(u_y * u_y + 2 * a_y * y))
                         / a_y;
-                double v_x = ((double) (newX - oldX)) / dt; // pixels / seconds
+                double v_x = (newX > oldX ? 55.0 : -55.0);
+                // double v_x = ((double) (newX - oldX)) / dt; // pixels / seconds
 
                 double distanceFromCenter = Math.abs(newX - 1080);
                 double timeAvailable =
@@ -266,8 +278,12 @@ public class Main {
         //                    x.BALL_X + 50,
         //                    x.BALL_Y - 1))
         //            * 180.0 / Math.PI);
+        // try {
+        //     x.debugFrame();
+        // } catch (Exception e) {
+
+        // }
         try {
-            // x.debugFrame();
             x.run();
         } catch (AWTException e) {
 
