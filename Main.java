@@ -38,17 +38,6 @@ public class Main {
         }
     };
 
-
-    public void scoreStageOne() throws InterruptedException {
-        robot.mouseMove(1100, 700);
-        for (int i = 1 ; i < 10 ; i++) {
-            robot.mouseMove(1100, 700 - i * 10);
-            robot.mousePress(InputEvent.BUTTON1_MASK);
-            Thread.sleep(50);
-        }
-        Thread.sleep(2000);
-    }
-
     public Main() {
         try {
             robot = new Robot();
@@ -105,11 +94,12 @@ public class Main {
         // final double vy = 0.0;
         // final double c = 0.0;
 
+        // return Math.atan2(y, x);
         // return Math.atan2(y + 0.5 * , x);
-        // return Math.atan2((4 * h * y), (x * x + 4 * h * x));
-        return Math.atan2(
-                (y + square(Math.sqrt(h)+Math.sqrt(h-y))),
-                x);
+        return Math.atan2((4 * h * y), (x * x + 4 * h * x));
+        // return Math.atan2(
+        //         (y + square(Math.sqrt(h)+Math.sqrt(h-y))),
+        //         x);
     }
 
     public void debugFrame() {
@@ -134,12 +124,82 @@ public class Main {
         robot.mousePress(InputEvent.BUTTON1_MASK);
         Thread.sleep(300);
         robot.mouseRelease(InputEvent.BUTTON1_MASK);
-        Thread.sleep(5000);
+        Thread.sleep(1500);
+        final long SCREENSHOT_SLEEP = 500;
+        final long DYNAMIC_DELAY = 100;
 
-        for (int i = 0 ; i < 10 ; i++) {
-            BufferedImage screenShot = robot.createScreenCapture(
-                    new Rectangle(SS_X, SS_Y, 360, 600));
-            Position hoopPosition = findTarget(screenShot);
+        for (int i = 0 ;  ; i++) {
+
+            Position hoopPosition = null;
+
+            while (true) {
+                BufferedImage screenShotOne = robot.createScreenCapture(
+                        new Rectangle(SS_X, SS_Y, 360, 600));
+                Thread.sleep(SCREENSHOT_SLEEP);
+                BufferedImage screenShotTwo = robot.createScreenCapture(
+                        new Rectangle(SS_X, SS_Y, 360, 600));
+                Position oldHoopPosition = findTarget(
+                        screenShotOne);
+                Position newHoopPosition = findTarget(
+                        screenShotTwo);
+                int oldX = oldHoopPosition.getX();
+                int newX = newHoopPosition.getX();
+                int diff = newX - oldX;
+
+                if (diff == 0) {
+                    hoopPosition = newHoopPosition;
+                    System.out.println("Static case");
+                    break;
+
+                } else if (diff > 0) {  // moving to the right
+                    if (newX > BALL_X) {
+                        continue;
+                    }
+
+                } else if (diff < 0) {  // moving to the left
+                    if (newX < BALL_X) {
+                        continue;
+                    }
+                }
+                System.out.println("Moving case");
+
+                final double h = 350.0;
+                final double a_y = -1840;
+                final double u_y = Math.sqrt(-2 * a_y * h);
+
+                double y = newHoopPosition.getY() - BALL_Y;
+                double timeRequired =
+                        (-u_y + Math.sqrt(u_y * u_y - 2 * a_y * y))
+                        / a_y;
+                double v_x = 60.0; // pixels / seconds
+
+                double distanceFromCenter = Math.abs(newX - 1080);
+                double timeAvailable = distanceFromCenter / v_x;
+                long sleepMs =
+                        ((long) ((timeAvailable - timeRequired) * 1000))
+                        - DYNAMIC_DELAY;
+
+                System.out.println("y = " + y);
+                System.out.println("New x = " + newX);
+                System.out.println("Old x = " + oldX);
+                System.out.println("v_x = " + v_x);
+                System.out.println("Time required = " + timeRequired);
+                System.out.println("Time available = " + timeAvailable);
+                System.out.println("Sleep time = " + sleepMs);
+                if (sleepMs < 0) {
+                    System.out.println("Not feasible!");
+                    continue;
+                }
+                System.out.println(
+                        "Sleeping now for "
+                        + (timeAvailable - timeRequired)
+                        + " seconds");
+                Thread.sleep(sleepMs);
+
+                hoopPosition = new Position(1080, 427);
+                break;
+            }
+
             double angle = calculateTargetAngle(hoopPosition);
             double angleInDegrees = angle * 180.0 / Math.PI;
             Position origin = new Position(BALL_X, BALL_Y);
@@ -149,10 +209,9 @@ public class Main {
             robot.mouseMove(
                     hoopPosition.getX(),
                     hoopPosition.getY());
-            Thread.sleep(500);
             robot.mouseMove(START_X, START_Y);
             throwTarget(angle);
-            Thread.sleep(4000);
+            Thread.sleep(3000);
         }
 
     }
@@ -182,19 +241,19 @@ public class Main {
     public static void main(String[] args) {
         Main x = new Main();
 
-            System.out.println(
-                    x.calculateTargetAngle(
-                        new Position(
-                            x.BALL_X + 50,
-                            x.BALL_Y - 1))
-                    * 180.0 / Math.PI);
-        // try {
-        //     // x.debugFrame();
-        //     // x.run();
-        // } catch (AWTException e) {
+        //    System.out.println(
+        //            x.calculateTargetAngle(
+        //                new Position(
+        //                    x.BALL_X + 50,
+        //                    x.BALL_Y - 1))
+        //            * 180.0 / Math.PI);
+        try {
+            // x.debugFrame();
+            x.run();
+        } catch (AWTException e) {
 
-        // } catch (InterruptedException e) {
+        } catch (InterruptedException e) {
 
-        // }
+        }
     }
 }
