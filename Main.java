@@ -117,6 +117,8 @@ public class Main {
         frame.setVisible(true);
     }
 
+    public boolean isDynamicMode = false;
+
     public void run() throws InterruptedException, AWTException {
         robot.mouseMove(START_X, START_Y);
         robot.mousePress(InputEvent.BUTTON1_MASK);
@@ -125,19 +127,26 @@ public class Main {
         Thread.sleep(300);
         robot.mouseRelease(InputEvent.BUTTON1_MASK);
         Thread.sleep(1500);
+
+        // All in ms
         final long SCREENSHOT_SLEEP = 500;
-        final long DYNAMIC_DELAY = 100;
+        final long THROW_DRAG_DELAY = 1000;
 
         for (int i = 0 ;  ; i++) {
 
             Position hoopPosition = null;
 
             while (true) {
+                System.out.println("=============");
                 BufferedImage screenShotOne = robot.createScreenCapture(
                         new Rectangle(SS_X, SS_Y, 360, 600));
+                long t1 = System.currentTimeMillis();
                 Thread.sleep(SCREENSHOT_SLEEP);
                 BufferedImage screenShotTwo = robot.createScreenCapture(
                         new Rectangle(SS_X, SS_Y, 360, 600));
+                long t2 = System.currentTimeMillis();
+                double dt = ((double) (t2 - t1)) * 0.001;
+
                 Position oldHoopPosition = findTarget(
                         screenShotOne);
                 Position newHoopPosition = findTarget(
@@ -147,11 +156,19 @@ public class Main {
                 int diff = newX - oldX;
 
                 if (diff == 0) {
+                    if (isDynamicMode) {
+                        System.out.println(
+                                "Cannot backtrack to static mode!");
+                        continue;
+                    }
                     hoopPosition = newHoopPosition;
                     System.out.println("Static case");
                     break;
 
-                } else if (diff > 0) {  // moving to the right
+                }
+                isDynamicMode = true;
+
+                if (diff > 0) {  // moving to the right
                     if (newX > BALL_X) {
                         continue;
                     }
@@ -171,13 +188,14 @@ public class Main {
                 double timeRequired =
                         (-u_y + Math.sqrt(u_y * u_y - 2 * a_y * y))
                         / a_y;
-                double v_x = 60.0; // pixels / seconds
+                double v_x = ((double) (newX - oldX)) / dt; // pixels / seconds
 
                 double distanceFromCenter = Math.abs(newX - 1080);
-                double timeAvailable = distanceFromCenter / v_x;
+                double timeAvailable =
+                        distanceFromCenter / Math.abs(v_x);
                 long sleepMs =
                         ((long) ((timeAvailable - timeRequired) * 1000))
-                        - DYNAMIC_DELAY;
+                        - THROW_DRAG_DELAY;
 
                 System.out.println("y = " + y);
                 System.out.println("New x = " + newX);
@@ -189,11 +207,12 @@ public class Main {
                 if (sleepMs < 0) {
                     System.out.println("Not feasible!");
                     continue;
+                } else if (sleepMs > 1000) {
+                    System.out.println("Not sleeping for > 1s");
+                    continue;
                 }
                 System.out.println(
-                        "Sleeping now for "
-                        + (timeAvailable - timeRequired)
-                        + " seconds");
+                        "Sleeping now for " + sleepMs + " seconds");
                 Thread.sleep(sleepMs);
 
                 hoopPosition = new Position(1080, 427);
